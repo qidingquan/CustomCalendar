@@ -27,6 +27,9 @@ public class CalendarView extends ViewPager implements DayAdapter.OnItemClickLis
     private int colnumn = 7;//显示7列
     private int[] selectPosion;//当前选中的日期位置    0 表示月的位置 1 表示月中某天的位置
     private int monthIndex;//当前月索引
+    private int monthNum;//显示的月份数
+    private int[] startTime;//开始时间
+    private int[] endTime;//结束时间
 
     public CalendarView(Context context) {
         this(context, null);
@@ -67,11 +70,11 @@ public class CalendarView extends ViewPager implements DayAdapter.OnItemClickLis
     }
 
     /**
-     * 获取选择的年月
+     * 获取当前的年月
      *
      * @return
      */
-    public DateEntity getSelectYearMonth() {
+    private DateEntity getSelectYearMonth() {
         DateEntity dateEntity = new DateEntity();
         if (null != dayAdapterList && dayAdapterList.indexOfKey(monthIndex) != -1) {
             dateEntity = dayAdapterList.get(monthIndex).getYearMonth();
@@ -103,10 +106,12 @@ public class CalendarView extends ViewPager implements DayAdapter.OnItemClickLis
      * @param endTime   结束时间
      */
     public void setData(int[] startTime, int[] endTime) {
+        this.startTime = startTime;
+        this.endTime = endTime;
         //获取对应得年月
         int year = startTime[0];
         //获取结束时间和开始时间相差的月份
-        int monthNum = CalendarUtil.getMidMonths(startTime, endTime);
+        monthNum = CalendarUtil.getMidMonths(startTime, endTime);
         //初始化月的数据
         for (int i = 0; i < monthNum; i++) {
             //初始化月
@@ -149,6 +154,58 @@ public class CalendarView extends ViewPager implements DayAdapter.OnItemClickLis
         });
         selectPosion[0] = monthIndex;//设置当前选中日期的月的位置
 
+    }
+
+    /**
+     * 设置选中的年月日
+     *
+     * @param year
+     * @param month
+     * @param day
+     */
+    public void setSelectDate(int year, int month, int day) {
+        int[] datePosition = getDatePosition(year, month, day);
+        setCurrentItem(datePosition[0]);
+        changeSelectState(datePosition[1]);
+    }
+
+    /**
+     * 跳转到今天
+     */
+    public void toToday() {
+        int[] datePosition = getDatePosition(today[0], today[1], today[2]);
+        setCurrentItem(datePosition[0]);
+    }
+
+    /**
+     * 获取某个日期的 月位置和天位置
+     *
+     * @param year
+     * @param month
+     * @param day
+     * @return
+     */
+    private int[] getDatePosition(int year, int month, int day) {
+        int[] datePosition = new int[2];
+        outer:
+        for (int i = 0; i < dayAdapterList.size(); i++) {
+            DayAdapter dayAdapter = dayAdapterList.get(i);
+            List<DateEntity> dateList = dayAdapter.getDateList();
+            if (dateList != null && dateList.size() > 0) {
+                for (int j = 0; j < dateList.size(); j++) {
+                    if (year == dateList.get(j).getSolarYear()
+                            && month == dateList.get(j).getSolarMonth()
+                            && day == dateList.get(j).getSolarDay()
+                            && 0 == dateList.get(j).getType()) {
+                        //年月日相同 并且为本月数据
+                        datePosition[0] = i;
+                        datePosition[1] = j;
+                        break outer;
+                    }
+                }
+            }
+        }
+        return datePosition;
     }
 
     /**
@@ -203,6 +260,34 @@ public class CalendarView extends ViewPager implements DayAdapter.OnItemClickLis
         dateEntity.setSolarMonth(month);
         dateEntity.setSolarDay(day);
         dateEntity.setType(type);
+        //小于开始时间设置该日期不能操作
+        if (startTime != null && startTime.length > 2) {
+            if (year < startTime[0]) {
+                dateEntity.setDisEnable(true);
+            } else if (year == startTime[0]) {
+                if (month < startTime[1]) {
+                    dateEntity.setDisEnable(true);
+                } else if (month == startTime[1]) {
+                    if (day < startTime[2]) {
+                        dateEntity.setDisEnable(true);
+                    }
+                }
+            }
+        }
+        //大于结束时间设置该日期不能用
+        if (endTime != null && endTime.length > 2) {
+            if (year > endTime[0]) {
+                dateEntity.setDisEnable(true);
+            } else if (year == endTime[0]) {
+                if (month > endTime[1]) {
+                    dateEntity.setDisEnable(true);
+                } else if (month == endTime[1]) {
+                    if (day > endTime[2]) {
+                        dateEntity.setDisEnable(true);
+                    }
+                }
+            }
+        }
         if (year == today[0] && month == today[1] && day == today[2]) {
             dateEntity.setToday(true);
         }
@@ -213,17 +298,50 @@ public class CalendarView extends ViewPager implements DayAdapter.OnItemClickLis
     public void onItemClick(int position, DateEntity dateEntity) {
         switch (dateEntity.getType()) {
             case -1://上一月数据
-
+                if (monthIndex > 0) {//还有上一页数据
+                    setCurrentItem(--monthIndex);
+                    changeSelectState(getDatePosition(monthIndex, dateEntity));
+                }
                 break;
             case 0://本月数据
                 changeSelectState(position);
                 break;
             case 1://下一月数据
-
+                if (monthIndex < monthNum - 1) {//还有下一页数据
+                    setCurrentItem(++monthIndex);
+                    //获取该日期在下一个月的位置 position
+                    changeSelectState(getDatePosition(monthIndex, dateEntity));
+                }
                 break;
             default:
                 break;
         }
+    }
+
+    /**
+     * 获取某个日期在某月中的位置
+     *
+     * @param monthIndex 所在月的位置
+     * @param dateEntity 日期数据
+     * @return 位置
+     */
+    private int getDatePosition(int monthIndex, DateEntity dateEntity) {
+        int position = 0;
+        if (dayAdapterList != null && dayAdapterList.indexOfKey(monthIndex) != -1) {
+            DayAdapter dayAdapter = dayAdapterList.get(monthIndex);
+            List<DateEntity> dateList = dayAdapter.getDateList();
+            if (dateList != null && dateList.size() > 0) {
+                for (int i = 0; i < dateList.size(); i++) {
+                    if (dateList.get(i).getSolarYear() == dateEntity.getSolarYear()
+                            && dateList.get(i).getSolarMonth() == dateEntity.getSolarMonth()
+                            && dateList.get(i).getSolarDay() == dateEntity.getSolarDay()) {
+                        position = i;
+                        break;
+                    }
+                }
+            }
+        }
+        return position;
     }
 
     /**

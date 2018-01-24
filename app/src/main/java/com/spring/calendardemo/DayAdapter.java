@@ -22,6 +22,7 @@ public class DayAdapter extends RecyclerView.Adapter<DayAdapter.VH> {
 
     private List<DateEntity> dateList;
     private DateEntity dateEntity;
+
     public DayAdapter(List<DateEntity> dateList) {
         this.dateList = dateList;
     }
@@ -69,7 +70,13 @@ public class DayAdapter extends RecyclerView.Adapter<DayAdapter.VH> {
             default:
                 break;
         }
-        holder.tvSolar.setSelected(date.isSelected());
+        if (date.isDisEnable()) {
+            holder.tvSolar.setEnabled(false);
+            holder.tvSolar.setTextColor(holder.tvSolar.getContext().getResources().getColor(R.color.light_gray));
+        } else {
+            holder.tvSolar.setEnabled(true);
+            holder.tvSolar.setSelected(date.isSelected());
+        }
         if (!date.isSelected() && date.isToday()) {
             holder.tvSolar.setBackgroundResource(R.drawable.bg_today);
         }

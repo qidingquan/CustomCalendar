@@ -18,6 +18,7 @@ public class DateEntity implements Serializable {
     private int type;//-1表示前一个月的数据 0 表示上一个月的数据 1表示下一个月的数据
     private boolean isSelected;//是否当前选中日期
     private boolean isToday;//是否是今天
+    private boolean isDisEnable;//true该日期只能显示不能做任何事件
 
     public int getSolarYear() {
         return solarYear;
@@ -89,5 +90,13 @@ public class DateEntity implements Serializable {
 
     public void setToday(boolean today) {
         isToday = today;
+    }
+
+    public boolean isDisEnable() {
+        return isDisEnable;
+    }
+
+    public void setDisEnable(boolean disEnable) {
+        isDisEnable = disEnable;
     }
 }

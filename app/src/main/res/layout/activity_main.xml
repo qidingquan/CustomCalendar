@@ -6,22 +6,10 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.spring.calendardemo.MainActivity">
-
-    <com.spring.calendardemo.WeekView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <com.spring.calendardemo.CalendarView
-        android:id="@+id/view_calendar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <TextView
-        android:id="@+id/tv_month"
+    <Button
+        android:id="@+id/btn_date"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/tv_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="请选择日期"/>
+
 </LinearLayout>

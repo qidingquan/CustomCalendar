@@ -131,7 +131,7 @@ public class CalendarUtil {
             return monthNum;
         }
         if (date1[0] < date2[0]) {
-            monthNum = (date2[0] - date1[0]) * 12 + (12 - date1[1])+1;
+            monthNum = (date2[0] - date1[0]) * 12 -date1[1]+date2[1]+1;
         } else if (date1[0] == date2[0]) {
             if (date2[1] > date1[1]) {
                 monthNum = date2[1] - date1[1]+1;

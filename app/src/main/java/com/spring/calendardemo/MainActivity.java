@@ -1,41 +1,52 @@
 package com.spring.calendardemo;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 
-    @BindView(R.id.view_calendar)
-    CalendarView viewCalendar;
-    @BindView(R.id.tv_date)
-    TextView tvDate;
-    @BindView(R.id.tv_month)
-    TextView tvMonth;
+    private CalendarPopwindow calendarPopwindow;
+    private boolean isDismiss = false;
+
+    @OnClick({R.id.btn_date})
+    public void click(View view) {
+        switch (view.getId()) {
+            case R.id.btn_date:
+
+                calendarPopwindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+                    @Override
+                    public void onDismiss() {
+                        isDismiss = true;
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                isDismiss = false;
+                            }
+                        },200);
+                    }
+                });
+                if (calendarPopwindow != null && !isDismiss && !calendarPopwindow.isShowing()) {
+                    calendarPopwindow.showAsDropDown(view);
+                }
+                break;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        calendarPopwindow = new CalendarPopwindow(this);
 
-        int[] startTime = {2018, 1, 22};
-        int[] endTime = {2018, 3, 22};
-        viewCalendar.setData(startTime, endTime);
-        viewCalendar.setCalendarListener(new CalendarView.CalendarListener() {
-
-            @Override
-            public void changeMonth(DateEntity dateEntity) {
-                tvMonth.setText(dateEntity.getSolarYear() + "年" + dateEntity.getSolarMonth() + "月");
-            }
-
-            @Override
-            public void selectDate(DateEntity dateEntity) {
-                tvDate.setText(dateEntity.getSolarYear() + "年" + dateEntity.getSolarMonth() + "月" + dateEntity.getSolarDay() + "日");
-            }
-        });
     }
 }
